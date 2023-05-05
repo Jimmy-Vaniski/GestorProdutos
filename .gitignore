@@ -1,0 +1,22 @@
+# Arquivos gerados pelo Pycharm
+.idea/
+
+# Arquivos de configuração do Pycharm
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Arquivos gerados pelo Tkinter
+*.pyc
+__pycache__/
+
+# Banco de dados SQLite
+*.db
+*.db3
+*.sqlite
+*.sqlite3
+
+# Arquivos gerados pelo sistema operacional
+.DS_Store
+Thumbs.db
