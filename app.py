@@ -27,7 +27,6 @@ class Produto:
 
         # Escrever os dados no ecrã
         for linha in registos_db:
-            print(linha)  # print para verificar por consola os dados
             self.tabela.insert('', 0, text=linha[1], values=linha[2])
 
     def validacao_nome(self):
@@ -58,18 +57,14 @@ class Produto:
             self.preco.delete(0, END)
         elif self.validacao_nome() and self.validacao_preco() == False:
             self.mensagem['text'] = 'Campo obrigatório "Preço"! Vazio ou inválido '
-        elif self.validacao_nome() == False and self.validacao_preco():  #####################################################################################
+        elif self.validacao_nome() == False and self.validacao_preco():
             self.mensagem['text'] = 'Campo obrigatório "Nome" Vazio!  '
         else:
             self.mensagem['text'] = 'Tipo de registo inválido! Revisar dados. '
         self.get_produtos()  # serve para atualizar os registos
 
     def del_produto(self):
-        """Debug
-         print(self.tabela.item(self.tabela.selection()))
-         print(self.tabela.item(self.tabela.selection())['text'])
-         print(self.tabela.item(self.tabela.selection())['values'])
-         print(self.tabela.item(self.tabela.selection())['values'][0])"""
+
         self.mensagem['text'] = ''
         try:
             self.tabela.item(self.tabela.selection())['text'][0]
@@ -87,18 +82,27 @@ class Produto:
     def atualizar_produtos(self, novo_nome, antigo_nome, novo_preco, antigo_preco):
         produto_modificado = False
         query = 'UPDATE produto SET nome = ?, preco = ? WHERE nome = ? AND preco = ?'
-        if novo_nome != '' and novo_preco != '':
-            parametros = (novo_nome, novo_preco, antigo_nome, antigo_preco)
-            produto_modificado = True
-        elif novo_nome != '' and novo_preco == '':
+        if novo_nome != '':
             parametros = (novo_nome, antigo_preco, antigo_nome, antigo_preco)
             produto_modificado = True
-        elif novo_nome == '' and novo_preco != '':
-
-            parametros = (antigo_nome, novo_preco, antigo_nome, antigo_preco)
+        else:
+            parametros = (antigo_nome, antigo_preco, antigo_nome, antigo_preco)
             produto_modificado = True
 
-        if (produto_modificado):
+        if novo_preco != '':
+            try:
+                if novo_nome != '':
+                    filtro = (novo_nome, novo_preco, antigo_nome, antigo_preco)
+                else:
+                    filtro = (antigo_nome, novo_preco, antigo_nome, antigo_preco)
+                novo_preco = round(float(novo_preco.replace(',', '.')), 2)
+                parametros = filtro
+                produto_modificado = True
+            except ValueError:
+                self.mensagem['text'] = "Novo preço inválido"
+                return False
+
+        if produto_modificado:
             self.db_consulta(query, parametros)  # Executar a consulta
             self.janela_editar.destroy()  # Fechar a janela de edição de
 
@@ -128,36 +132,37 @@ class Produto:
         titulo = Label(self.janela_editar, text='Atualizar produto', font=('Calibri', 30, 'bold'))
         titulo.grid(column=0, row=0)
 
-        frame_ep = LabelFrame(self.janela_editar, text="Editar o seguinte Produto")  # frame para editar
+        frame_ep = LabelFrame(self.janela_editar, text="Editar o Produto",
+                              font=('Calibri', 14, 'bold'))  # frame para editar
         frame_ep.grid(row=1, column=0, columnspan=20, pady=20)
 
         # Label Nome antigo
-        self.etiqueta_nome_antigo = Label(frame_ep, text="Nome antigo: ")  # Etiqueta de texto localizada no frame
+        self.etiqueta_nome_antigo = Label(frame_ep, text="Nome antigo: ",
+                                          font=('Calibri', 13))  # Etiqueta de texto localizada no frame
         self.etiqueta_nome_antigo.grid(row=2, column=0)  # Posicionamento através de grid
         # apenas para mostrar o nome antigo apenas leitura
         self.input_nome_antigo = Entry(frame_ep, textvariable=StringVar(self.janela_editar, value=nome),
-                                       state='readonly')
+                                       state='readonly', font=('Calibri', 13))
         self.input_nome_antigo.grid(row=2, column=1)
         # Label Nome novo
-        self.etiqueta_nome_novo = Label(frame_ep, text="Nome novo: ")
+        self.etiqueta_nome_novo = Label(frame_ep, text="Nome novo: ", font=('Calibri', 13))
         self.etiqueta_nome_novo.grid(row=3, column=0)
         # Entry Nome novo (texto que se poderá modificar)
-        self.input_nome_novo = Entry(frame_ep)
+        self.input_nome_novo = Entry(frame_ep, font=('Calibri', 13))
         self.input_nome_novo.grid(row=3, column=1)
         self.input_nome_novo.focus()  # Para que a seta do rato vá a esta Entry ao início
         # Label Preço antigo
-        self.etiqueta_preco_antigo = Label(frame_ep, text="Preço antigo: ")  # Etiqueta de texto localizada no frame
+        self.etiqueta_preco_antigo = Label(frame_ep, text="Preço antigo: ",
+                                           font=('Calibri', 13))  # Etiqueta de texto localizada no frame
         self.etiqueta_preco_antigo.grid(row=4, column=0)  # Posicionamento através de grid
         # Entry Preço antigo (texto que não se poderá modificar)
         self.input_preco_antigo = Entry(frame_ep, textvariable=StringVar(self.janela_editar, value=old_preco),
-                                        state='readonly')
+                                        state='readonly', font=('Calibri', 13))
         self.input_preco_antigo.grid(row=4, column=1)
         # Label Preço novo
-        self.etiqueta_preco_novo = Label(frame_ep, text="Preço novo: ")
+        self.etiqueta_preco_novo = Label(frame_ep, text="Preço novo: ", font=('Calibri', 13))
         self.etiqueta_preco_novo.grid(row=5, column=0)
-        # Entry Preço novo (texto que se poderá modificar)
-        self.input_preco_novo = Entry(frame_ep)
-        self.input_preco_novo.grid(row=5, column=1)
+
         # Botão Atualizar Produto
         self.botao_atualizar = ttk.Button(frame_ep, text="Atualizar Produto", command=lambda:
         self.atualizar_produtos(self.input_nome_novo.get(), self.input_nome_antigo.get(),
@@ -166,10 +171,12 @@ class Produto:
         self.botao_atualizar.grid(row=6, columnspan=2, sticky=W + E)
         self.etiqueta_preco_novo.grid(row=5, column=0)
         # Entry Preço novo (texto que se poderá modificar)
-        self.input_preco_novo = Entry(frame_ep)
-        self.input_preco_novo.grid(row=5, column=1)
+        self.input_preco_novo = Entry(frame_ep, font=('Calibri', 13))
+        self.input_preco_novo.grid(row=5, column=1)  ######
         # Botão Atualizar Produto
-        self.botao_atualizar = ttk.Button(frame_ep, text="Atualizar Produto", command=lambda:
+        s = ttk.Style()
+        s.configure('my.TButton', font=('Calibri', 14, 'bold'))
+        self.botao_atualizar = ttk.Button(frame_ep, text="Atualizar Produto", style='my.TButton', command=lambda:
         self.atualizar_produtos(self.input_nome_novo.get(), self.input_nome_antigo.get(),
                                 self.input_preco_novo.get(), self.input_preco_antigo.get()))
         self.botao_atualizar.grid(row=6, columnspan=2, sticky=W + E)
@@ -177,38 +184,41 @@ class Produto:
     def __init__(self, root):
         self.janela = root
         self.janela.title("Gestor de Produtos")  # Título da janela
-        self.janela.resizable(1, 1)  # Ativar o redimensionamento da janela
+        self.janela.resizable(0, 0)  # Ativar o redimensionamento da janela
         self.janela.wm_iconbitmap('recursos/icon.ico')
 
         # Frame principal
-        frame = LabelFrame(self.janela, text="Registar um novo Produto")  # isso corta a linha com o que se escreveu
+        frame = LabelFrame(self.janela, text="Registar um novo Produto", font=('Calibri', 14, 'bold'))
+        # isso corta a linha com o que se escreveu
         frame.grid(row=0, column=0, columnspan=3, pady=20)  # distancio para organizar
 
         # Criando label e input (entry)
-        self.l_nome = Label(frame, text="Nome: ")  # Etiqueta de texto localizada
+        self.l_nome = Label(frame, text="Nome: ", font=('Calibri', 13))  # Etiqueta de texto localizada
 
         # indico em qual frame
         self.l_nome.grid(row=1, column=0)  # Posicionamento através de grid
 
         # criando a entry
-        self.nome = Entry(frame)  # Caixa de texto (input de texto) localizada no frame
+        self.nome = Entry(frame, font=('Calibri', 13))  # Caixa de texto (input de texto) localizada no frame
         self.nome.focus()  # Para que o foco do rato vá a esta Entry no início
         self.nome.grid(row=1, column=1)
 
         # no mesmo frame porem na 3 linha *row2 crio label de preço
-        self.l_preco = Label(frame, text="Preço: ")
+        self.l_preco = Label(frame, text="Preço: ", font=('Calibri', 13))
         self.l_preco.grid(row=2, column=0)
 
         # caixa de texto para o preço
-        self.preco = Entry(frame)
+        self.preco = Entry(frame, font=('Calibri', 13))
         self.preco.grid(row=2, column=1)
 
         # Botão Adicionar Produto
-        self.botao_adicionar = ttk.Button(frame, text="Salvar Resgisto", command=self.add_produto)
+        s = ttk.Style()
+        s.configure('my.TButton', font=('Calibri', 14, 'bold'))
+        self.botao_adicionar = ttk.Button(frame, text="Salvar Resgisto", command=self.add_produto, style='my.TButton')
         self.botao_adicionar.grid(row=3, columnspan=2, sticky=W + E)
 
         # Avisos
-        self.mensagem = Label(text='', fg='red')
+        self.mensagem = Label(text='', fg='red', font=('Calibri', 14, 'bold'))
         self.mensagem.grid(row=3, column=0, columnspan=2, sticky=W + E)
 
         # Estilo para a tabela
@@ -224,9 +234,11 @@ class Produto:
         self.tabela.heading('#1', text='Preço', anchor=CENTER)  # Cabeçalho da coluna preço
 
         # botoes para atualizar e apagar
-        botao_eliminar = ttk.Button(text='Apagar', command=self.del_produto)
+        s = ttk.Style()
+        s.configure('my.TButton', font=('Calibri', 14, 'bold'))
+        botao_eliminar = ttk.Button(text='Apagar', command=self.del_produto, style='my.TButton')
         botao_eliminar.grid(row=5, column=0, sticky=W + E)
-        botao_editar = ttk.Button(text='Atualizar', command=self.edit_produto)
+        botao_editar = ttk.Button(text='Atualizar', command=self.edit_produto, style='my.TButton')
         botao_editar.grid(row=5, column=1, sticky=W + E)
 
         # Chama o metodo para listar os produtos
